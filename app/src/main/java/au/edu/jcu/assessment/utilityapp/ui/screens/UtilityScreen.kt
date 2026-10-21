@@ -50,22 +50,13 @@ fun UtilityScreen(
             item { NextClassCard(nextClass(snapshot.courses, now), now) }
         }
         item { DeadlineSummaryCard(snapshot.tasks, now) }
-        item {
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Task progress", style = MaterialTheme.typography.titleMedium)
-                    Text("$completed of ${snapshot.tasks.size} completed",
-                        style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-                    LinearProgressIndicator(
-                        progress = { if (snapshot.tasks.isEmpty()) 0f else completed.toFloat() / snapshot.tasks.size },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Text("Across your current task list",
-                        style = MaterialTheme.typography.bodySmall)
-                }
-            }
+        if (snapshot.settings.showWeather) {
+            item { WeatherCard(state.weather, snapshot.settings, onRefreshWeather) }
         }
-        item { SectionHeader("Tasks", "Add task", !state.saving, onAddTask) }
+        item {
+            SectionHeader("Tasks", "Add task", !state.saving, onAddTask,
+                subtitle = "$completed/${snapshot.tasks.size} completed")
+        }
         if (visibleTasks.isEmpty()) {
             item { EmptyCard(
                 if (snapshot.tasks.isEmpty()) "A little plan goes a long way."
@@ -131,9 +122,6 @@ fun UtilityScreen(
                 }
             }
         }
-        if (snapshot.settings.showWeather) {
-            item { WeatherCard(state.weather, snapshot.settings, onRefreshWeather) }
-        }
     }
 }
 
@@ -143,14 +131,14 @@ private fun DeadlineSummaryCard(tasks: List<StudyTask>, now: LocalDateTime) {
     val deadline = urgentTasks.firstOrNull()?.deadline?.let { LocalDateTime.parse(it) }
     val overdue = deadline != null && !deadline.isAfter(now)
     val containerColor = if (overdue) MaterialTheme.colorScheme.errorContainer
-        else MaterialTheme.colorScheme.tertiaryContainer
+        else MaterialTheme.colorScheme.surfaceVariant
     val contentColor = if (overdue) MaterialTheme.colorScheme.onErrorContainer
-        else MaterialTheme.colorScheme.onTertiaryContainer
+        else MaterialTheme.colorScheme.onSurfaceVariant
 
     Card(colors = CardDefaults.cardColors(
         containerColor = containerColor, contentColor = contentColor
     )) {
-        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(if (overdue) "OVERDUE DEADLINE" else "NEXT DEADLINE",
                 style = MaterialTheme.typography.labelLarge)
             if (deadline == null) {
@@ -179,9 +167,18 @@ private fun DeadlineSummaryCard(tasks: List<StudyTask>, now: LocalDateTime) {
 }
 
 @Composable
-private fun SectionHeader(title: String, action: String, enabled: Boolean, onClick: () -> Unit) {
+private fun SectionHeader(
+    title: String, action: String, enabled: Boolean, onClick: () -> Unit,
+    subtitle: String? = null
+) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            subtitle?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         TextButton(enabled = enabled, onClick = onClick) {
             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(4.dp))
@@ -204,7 +201,7 @@ private fun EmptyCard(title: String, subtitle: String) {
 @Composable
 private fun NextClassCard(occurrence: CourseOccurrence?, now: LocalDateTime) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             val ongoing = occurrence != null && !occurrence.start.isAfter(now)
             Text(if (ongoing) "IN CLASS NOW" else "NEXT CLASS",
                 style = MaterialTheme.typography.labelLarge)
@@ -235,7 +232,7 @@ private fun NextClassCard(occurrence: CourseOccurrence?, now: LocalDateTime) {
 private fun WeatherCard(state: WeatherUiState, settings: PlannerSettings, onRefresh: () -> Unit) {
     val uri = LocalUriHandler.current
     OutlinedCard {
-        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Campus weather", style = MaterialTheme.typography.titleMedium)
@@ -256,18 +253,27 @@ private fun WeatherCard(state: WeatherUiState, settings: PlannerSettings, onRefr
                 }
                 state.data != null -> {
                     val data = state.data
-                    Text("${data.temperature.roundToInt()}${data.unit.symbol}",
-                        style = MaterialTheme.typography.displaySmall)
-                    Text(data.description, style = MaterialTheme.typography.titleMedium)
-                    data.apparentTemperature?.takeIf { it.isFinite() }?.let {
-                        Text("Feels like ${it.roundToInt()}${data.unit.symbol}",
-                            style = MaterialTheme.typography.bodyMedium)
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Text("${data.temperature.roundToInt()}${data.unit.symbol}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.SemiBold)
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(data.description, style = MaterialTheme.typography.bodyLarge)
+                            data.apparentTemperature?.takeIf { it.isFinite() }?.let {
+                                Text("Feels like ${it.roundToInt()}${data.unit.symbol}",
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
                     Text("Provider time: ${data.observedAt.replace('T', ' ')} · ${data.timezone}",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }
-            TextButton(onClick = { uri.openUri("https://open-meteo.com/") }) {
+            TextButton(
+                onClick = { uri.openUri("https://open-meteo.com/") },
+                contentPadding = PaddingValues(horizontal = 0.dp)
+            ) {
                 Text("Weather data by Open-Meteo", style = MaterialTheme.typography.labelSmall)
             }
         }
