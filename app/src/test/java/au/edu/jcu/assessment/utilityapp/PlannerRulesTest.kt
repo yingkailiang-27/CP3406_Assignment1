@@ -6,6 +6,30 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PlannerRulesTest {
+    @Test fun alarmTimeUsesLeadTimeAndCatchesCurrentWindow() {
+        val course = StudyCourse("test", "Test", 1, 35, 50)
+        val snapshot = PlannerSnapshot(courses = listOf(course),
+            settings = PlannerSettings(remindersEnabled = true, reminderMinutes = 15))
+        val now = LocalDateTime.of(2026, 10, 26, 0, 18)
+        assertEquals(now.withMinute(20), nextReminderTime(snapshot, now, emptySet()))
+        assertEquals(now.withMinute(25), nextReminderTime(snapshot, now.withMinute(25), emptySet()))
+        assertEquals(now.plusWeeks(1).withMinute(20),
+            nextReminderTime(snapshot, now.withMinute(35), emptySet()))
+        assertEquals(now.plusWeeks(1).withMinute(20),
+            nextReminderTime(snapshot, now, setOf("test|2026-10-26")))
+        assertNull(nextReminderTime(snapshot.copy(settings = PlannerSettings()), now, emptySet()))
+        assertNull(nextReminderTime(snapshot.copy(courses = emptyList()), now, emptySet()))
+    }
+
+    @Test fun alarmTimeHandlesMidnightAndChoosesEarliestCourse() {
+        val course = StudyCourse("test", "Test", 1, 35, 50)
+        val later = StudyCourse("later", "Later", 2, 600, 660)
+        val snapshot = PlannerSnapshot(courses = listOf(later, course),
+            settings = PlannerSettings(remindersEnabled = true, reminderMinutes = 60))
+        val now = LocalDateTime.of(2026, 10, 25, 23, 0)
+        assertEquals(now.withMinute(35), nextReminderTime(snapshot, now, emptySet()))
+    }
+
     @Test fun summaryKeepsAllTiesAndIgnoresCompletedOrUndatedTasks() {
         val first = StudyTask("first", "Read", deadline = "2026-10-20T12:00")
         val tied = StudyTask("tied", "Write", deadline = "2026-10-20T12:00:00")

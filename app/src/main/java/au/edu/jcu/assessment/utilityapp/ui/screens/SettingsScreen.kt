@@ -15,6 +15,7 @@ import au.edu.jcu.assessment.utilityapp.ui.components.SelectionField
 @Composable
 fun SettingsScreen(
     settings: PlannerSettings, enabled: Boolean, notificationsAllowed: Boolean,
+    exactAlarmsAllowed: Boolean, onOpenAlarmSettings: () -> Unit,
     onChange: ((PlannerSettings) -> PlannerSettings) -> Unit,
     onReminderToggle: (Boolean) -> Unit, onOpenNotificationSettings: () -> Unit,
     modifier: Modifier = Modifier
@@ -61,11 +62,17 @@ fun SettingsScreen(
                 ) { label -> onChange { it.copy(reminderMinutes = label.substringBefore(" ").toInt()) } }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Android checks reminders periodically. Battery saving may delay delivery. " +
+                    "Reminders are scheduled for the selected time before class. " +
                         "Classes already started are not notified.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (!exactAlarmsAllowed) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("Allow Alarms & reminders in Android settings to schedule class reminders.",
+                        style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = onOpenAlarmSettings) { Text("Allow scheduled reminders") }
+                }
                 if (!notificationsAllowed) {
                     Spacer(Modifier.height(8.dp))
                     Text("Notifications are currently blocked by Android.",

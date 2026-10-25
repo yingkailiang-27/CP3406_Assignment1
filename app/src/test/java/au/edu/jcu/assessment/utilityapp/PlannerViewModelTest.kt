@@ -35,6 +35,7 @@ class PlannerViewModelTest {
         override suspend fun updateSettings(change: (PlannerSettings) -> PlannerSettings) {
             snapshots.value = snapshots.value.copy(settings = change(snapshots.value.settings))
         }
+        override suspend fun nextReminderAt(now: LocalDateTime): LocalDateTime? = null
         override suspend fun claimDueReminders(now: LocalDateTime) = emptyList<CourseOccurrence>()
     }
     private fun info(city: WeatherCity, unit: TemperatureUnit) =

@@ -135,3 +135,19 @@ fun dueReminders(
             it.reminderKey !in sent
     }
 }
+
+/** Plan only one next alarm. Already notified lessons advance to the following week. */
+fun nextReminderTime(
+    snapshot: PlannerSnapshot, now: LocalDateTime, sent: Set<String>
+): LocalDateTime? {
+    if (!snapshot.settings.remindersEnabled) return null
+    return snapshot.courses.map { course ->
+        var occurrence = nextOccurrence(course, now)
+        if (!occurrence.start.isAfter(now) || occurrence.reminderKey in sent) {
+            occurrence = CourseOccurrence(course, occurrence.start.plusWeeks(1))
+        }
+        val reminder = occurrence.start.minusMinutes(snapshot.settings.reminderMinutes.toLong())
+        // Enabling reminders inside the window should notify promptly, while still before class.
+        if (reminder.isBefore(now)) now else reminder
+    }.minOrNull()
+}

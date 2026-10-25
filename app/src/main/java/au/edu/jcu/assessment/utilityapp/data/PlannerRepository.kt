@@ -15,6 +15,8 @@ import au.edu.jcu.assessment.utilityapp.model.dueReminders
 import au.edu.jcu.assessment.utilityapp.model.validateCourse
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlinx.coroutines.flow.first
+import au.edu.jcu.assessment.utilityapp.model.nextReminderTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -26,6 +28,7 @@ interface PlannerRepository {
     suspend fun addCourse(course: StudyCourse)
     suspend fun deleteCourse(id: String)
     suspend fun updateSettings(change: (PlannerSettings) -> PlannerSettings)
+    suspend fun nextReminderAt(now: LocalDateTime): LocalDateTime?
     suspend fun claimDueReminders(now: LocalDateTime): List<CourseOccurrence>
 }
 
@@ -94,6 +97,11 @@ class LocalPlannerRepository(
 
     override suspend fun updateSettings(change: (PlannerSettings) -> PlannerSettings) =
         mutate { it.copy(settings = change(it.settings)) }
+
+    override suspend fun nextReminderAt(now: LocalDateTime): LocalDateTime? {
+        val preferences = store.data.first()
+        return nextReminderTime(decode(preferences), now, preferences[sentKey].orEmpty())
+    }
 
     override suspend fun claimDueReminders(now: LocalDateTime): List<CourseOccurrence> {
         var due: List<CourseOccurrence> = emptyList()

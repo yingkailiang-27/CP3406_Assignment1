@@ -34,6 +34,17 @@ class PlannerRepositoryTest {
     }
     @After fun tearDown() = runBlocking { scope.coroutineContext[Job]!!.cancelAndJoin() }
 
+    @Test fun alarmScheduleAdvancesAfterClaimAndCancelsWhenDisabled() = runBlocking {
+        repository.addCourse(StudyCourse("alarm", "Test", 1, 35, 50))
+        repository.updateSettings { it.copy(remindersEnabled = true, reminderMinutes = 15) }
+        val now = LocalDateTime.of(2026, 10, 26, 0, 18)
+        assertEquals(now.withMinute(20), repository.nextReminderAt(now))
+        assertEquals(1, repository.claimDueReminders(now.withMinute(20)).size)
+        assertEquals(now.plusWeeks(1).withMinute(20), repository.nextReminderAt(now.withMinute(21)))
+        repository.updateSettings { it.copy(remindersEnabled = false) }
+        assertNull(repository.nextReminderAt(now))
+    }
+
     @Test fun deadlinesAllowDuplicatesAndSurviveReload() = runBlocking {
         val deadline = "2026-10-20T23:59"
         repository.addTask("First", deadline)

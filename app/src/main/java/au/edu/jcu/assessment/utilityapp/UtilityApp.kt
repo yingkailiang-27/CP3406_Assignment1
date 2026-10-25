@@ -1,5 +1,7 @@
 package au.edu.jcu.assessment.utilityapp
 
+import android.net.Uri
+import au.edu.jcu.assessment.utilityapp.reminders.ReminderScheduler
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -51,6 +53,7 @@ fun UtilityApp(viewModel: PlannerViewModel) {
     var notificationsAllowed by remember {
         mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
     }
+    var exactAlarmsAllowed by remember { mutableStateOf(ReminderScheduler.exactAlarmsAllowed(context)) }
     val snackbar = remember { SnackbarHostState() }
     SideEffect {
         val style = if (state.snapshot.settings.darkTheme) {
@@ -72,6 +75,8 @@ fun UtilityApp(viewModel: PlannerViewModel) {
     }
     LifecycleResumeEffect(Unit) {
         notificationsAllowed = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        exactAlarmsAllowed = ReminderScheduler.exactAlarmsAllowed(context)
+        (context.applicationContext as StudyDayApplication).rescheduleReminders()
         onPauseOrDispose { }
     }
     val requestNotificationPermission = rememberLauncherForActivityResult(
@@ -146,6 +151,12 @@ fun UtilityApp(viewModel: PlannerViewModel) {
                         settings = state.snapshot.settings,
                         enabled = !state.saving,
                         notificationsAllowed = notificationsAllowed,
+                        exactAlarmsAllowed = exactAlarmsAllowed,
+                        onOpenAlarmSettings = {
+                            if (Build.VERSION.SDK_INT >= 31) context.startActivity(
+                                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                    Uri.parse("package:${context.packageName}")))
+                        },
                         onChange = viewModel::updateSettings,
                         onReminderToggle = { enabled ->
                             when {
