@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.seconds
 
 /** Handles a due alarm and restores scheduling after reboot, clock or permission changes. */
 class ReminderAlarmReceiver : BroadcastReceiver() {
@@ -17,7 +18,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         val result = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                withTimeout(8000) {
+                withTimeout(8.seconds) {
                     val app = context.applicationContext as StudyDayApplication
                     if (intent.action == REMIND && ClassNotifications.allowed(context)) {
                         val due = app.container.plannerRepository.claimDueReminders(LocalDateTime.now())

@@ -1,6 +1,6 @@
 package au.edu.jcu.assessment.utilityapp
 
-import android.net.Uri
+import androidx.core.net.toUri
 import au.edu.jcu.assessment.utilityapp.reminders.ReminderScheduler
 import android.Manifest
 import android.content.Intent
@@ -38,6 +38,7 @@ import au.edu.jcu.assessment.utilityapp.ui.theme.StudyDayTheme
 import au.edu.jcu.assessment.utilityapp.viewmodel.PlannerViewModel
 import java.time.LocalDateTime
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +70,7 @@ fun UtilityApp(viewModel: PlannerViewModel) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) {
                 value = LocalDateTime.now()
-                delay(15_000)
+                delay(15.seconds)
             }
         }
     }
@@ -155,7 +156,7 @@ fun UtilityApp(viewModel: PlannerViewModel) {
                         onOpenAlarmSettings = {
                             if (Build.VERSION.SDK_INT >= 31) context.startActivity(
                                 Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-                                    Uri.parse("package:${context.packageName}")))
+                                    "package:${context.packageName}".toUri()))
                         },
                         onChange = viewModel::updateSettings,
                         onReminderToggle = { enabled ->
