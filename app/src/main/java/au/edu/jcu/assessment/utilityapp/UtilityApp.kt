@@ -2,6 +2,9 @@ package au.edu.jcu.assessment.utilityapp
 
 import androidx.core.net.toUri
 import au.edu.jcu.assessment.utilityapp.reminders.ReminderScheduler
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.School
+import androidx.compose.ui.Alignment
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -102,21 +105,23 @@ fun UtilityApp(viewModel: PlannerViewModel) {
         Scaffold(
             topBar = {
                 TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background),
                     title = {
-                        Column {
-                            Text(if (page == 0) "StudyDay" else "Settings",
-                                style = MaterialTheme.typography.headlineSmall)
-                            Text(
-                                if (page == 0) "Your day, at a glance" else "Make it work for your day",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Surface(shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer) {
+                                Icon(Icons.Default.School, null, Modifier.padding(9.dp).size(20.dp))
+                            }
+                            Text("StudyDay", style = MaterialTheme.typography.titleLarge)
                         }
                     }
                 )
             },
             bottomBar = {
-                NavigationBar {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
                     NavigationBarItem(
                         selected = page == 0, onClick = { page = 0 },
                         icon = { Icon(Icons.Default.Home, contentDescription = null) },

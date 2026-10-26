@@ -1,5 +1,6 @@
 package au.edu.jcu.assessment.utilityapp.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
@@ -25,6 +26,14 @@ fun SettingsScreen(
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Make it yours", style = MaterialTheme.typography.headlineLarge)
+                Text("A few preferences for a calmer study day.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         item {
             SettingsGroup("Display") {
                 SettingSwitch("Show timetable", "Next class and weekly schedule",
@@ -100,11 +109,14 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card {
-        Column(Modifier.fillMaxWidth().padding(18.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(12.dp))
-            content()
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(title, style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp))
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(Modifier.fillMaxWidth().padding(18.dp)) { content() }
         }
     }
 }
@@ -114,11 +126,12 @@ private fun SettingSwitch(
     title: String, subtitle: String, checked: Boolean, enabled: Boolean,
     onChange: (Boolean) -> Unit
 ) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp),
+    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(3.dp))
             Text(subtitle, style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
